@@ -6,3 +6,6 @@ No escribe nada en Bims: los datos quedan en Firestore (proyecto TG Apps) para q
 - Conteos: `inventario/{agro|carnes|itakua}/conteos/{conteoId}` + `items/{productoId}`
 - Usos internos: `inventario/{agro|carnes|itakua}/usos_internos/{auto}` (estado `pendiente`)
 - Catálogo: `catalogo.json` (sin cantidades de stock)
+
+**Publicada en:** https://gargonzato-creator.github.io/inventario/ (copia en la carpeta `inventario/` del repo `gargonzato-creator.github.io`).
+Este repo es la fuente. Práctica sin tocar depósitos reales: agregar `?prueba` a la URL (depósito `inventario/prueba`).

@@ -1,7 +1,7 @@
 name: Publicar en GitHub Pages
+# Solo manual: GitHub Pages no está activado en este repo (activarlo en Settings > Pages > Source: GitHub Actions).
+# Mientras tanto la app se publica en https://gargonzato-creator.github.io/inventario/
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
