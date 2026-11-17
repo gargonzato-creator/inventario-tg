@@ -16,6 +16,7 @@ const firebaseConfig = {
   appId: "1:1058376237664:web:b3d63e5d6de5c759b57905"
 };
 
+export const APP_VERSION = "v4 (17/11)";
 const USUARIOS = ["Felix", "Tatiana", "Elías", "Junior"];
 const DEPOSITOS = [
   { id: "agro", nombre: "Almacén agropecuario", centro: "Almacén Agropecuario" },
@@ -90,8 +91,39 @@ signInAnonymously(auth).catch((e) => {
 
 // ---------- Catálogo ----------
 async function cargarCatalogo() {
-  const r = await fetch("catalogo.json");
-  st.catalogo = (await r.json()).map((p) => ({ ...p, _n: norm(p.p), _c: norm(p.c), _c2: norm(p.c2), _cz: sinCeros(norm(p.c)), _c2z: sinCeros(norm(p.c2)) }));
+  const r = await fetch("catalogo.json", { cache: "no-cache" });
+  st.catalogo = (await r.json()).map((p) => ({ ...p, _n: norm(p.p), _c: norm(p.c), _c2: norm(p.c2), _w: norm(p.p).split(/[^a-z0-9]+/).filter(Boolean), _cz: sinCeros(norm(p.c)), _c2z: sinCeros(norm(p.c2)) }));
+}
+// Alias y tolerancia a errores de tipeo
+const ALIAS = { electrolitico: "eletrolitico", vernil: "vetnil", desengrasante: "antigrasa" };
+function lev(a, b, max) {
+  if (Math.abs(a.length - b.length) > max) return max + 1;
+  let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i]; let minFila = i;
+    for (let j = 1; j <= b.length; j++) {
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      if (cur[j] < minFila) minFila = cur[j];
+    }
+    if (minFila > max) return max + 1;
+    prev = cur;
+  }
+  return prev[b.length];
+}
+const tolerancia = (w) => (w.length >= 7 ? 2 : w.length >= 4 ? 1 : 0);
+// ¿La palabra buscada coincide (exacta, parcial o con un error de tipeo) con alguna palabra del nombre?
+function palabraCoincide(w, p) {
+  if (p._n.includes(w)) return 2;
+  const alias = ALIAS[w]; if (alias && p._n.includes(alias)) return 2;
+  const tol = tolerancia(w); if (!tol) return 0;
+  for (const nw of p._w) {
+    if (nw.length < 3) continue;
+    for (const L of [w.length - 1, w.length, w.length + 1]) {
+      if (L < 3 || L > nw.length) continue;
+      if (lev(w, nw.slice(0, L), tol) <= tol) return 1;
+    }
+  }
+  return 0;
 }
 function buscar(q) {
   const nq = norm(q); if (!nq) return [];
@@ -103,6 +135,10 @@ function buscar(q) {
     else if (p._c2 && nq.length >= 6 && p._c2.includes(nq)) score = 80;
     else if (p._c.startsWith(nq)) score = 70;
     else if (palabras.every((w) => p._n.includes(w))) score = p._n.startsWith(palabras[0]) ? 60 : 50;
+    else {
+      const m = palabras.map((w) => palabraCoincide(w, p));
+      if (m.every((x) => x > 0)) score = 30 + m.reduce((a, b) => a + b, 0);
+    }
     if (score < 0) continue;
     if (p.d.includes(st.deposito)) score += 5;
     res.push([score, p]);
@@ -403,7 +439,28 @@ function escucharUsos() {
 // ---------- Inicio ----------
 buscadores.conteo = montarBuscador($('.buscador[data-modo="conteo"]'), (p) => panelConteo(p));
 buscadores.uso = montarBuscador($('.buscador[data-modo="uso"]'), elegirUso);
-cargarCatalogo().then(() => { window.__invReady = true; }).catch((e) => toast("No se pudo cargar el catálogo"));
+cargarCatalogo().then(() => { window.__invReady = true; pintarVersion(); }).catch((e) => toast("No se pudo cargar el catálogo"));
 pintarSync();
 router();
-if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch((e) => console.warn("sw", e));
+function pintarVersion() {
+  const el = document.getElementById("versionApp");
+  if (el) el.textContent = `App ${APP_VERSION} · ${st.catalogo.length ? st.catalogo.length + " productos" : "cargando catálogo…"}`;
+}
+pintarVersion();
+
+// ---------- Actualización automática (sirve también con la app anclada al inicio) ----------
+if ("serviceWorker" in navigator) {
+  let recargado = false;
+  const habiaControlador = !!navigator.serviceWorker.controller; // la primera instalación no recarga
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!habiaControlador || recargado || sessionStorage.getItem("inv_recarga") === APP_VERSION) return;
+    recargado = true; sessionStorage.setItem("inv_recarga", APP_VERSION);
+    location.reload();
+  });
+  navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then((reg) => {
+    const buscarActualizacion = () => reg.update().catch(() => {});
+    buscarActualizacion();
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") buscarActualizacion(); });
+    addEventListener("online", buscarActualizacion);
+  }).catch((e) => console.warn("sw", e));
+}
