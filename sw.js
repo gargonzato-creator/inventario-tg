@@ -1,5 +1,5 @@
 // Service worker: cachea la app y el catálogo para abrir sin señal.
-const VERSION = "inv-tg-v1";
+const VERSION = "inv-tg-v2";
 const LOCAL = ["./", "index.html", "app.js", "styles.css", "catalogo.json", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
 const CDN = [
   "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js",
@@ -17,7 +17,8 @@ self.addEventListener("install", (e) => {
 });
 self.addEventListener("activate", (e) => {
   e.waitUntil((async () => {
-    for (const k of await caches.keys()) if (k !== VERSION) await caches.delete(k);
+    // Solo cachés viejas de esta app: las otras apps del sitio comparten el mismo origen.
+    for (const k of await caches.keys()) if (k.startsWith("inv-tg-") && k !== VERSION) await caches.delete(k);
     await self.clients.claim();
   })());
 });

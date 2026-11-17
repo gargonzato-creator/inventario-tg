@@ -24,7 +24,7 @@ const DEPOSITOS = [
 ];
 // Depósito de práctica, solo con ?prueba en la URL (no es un depósito real)
 if (new URLSearchParams(location.search).has("prueba")) DEPOSITOS.push({ id: "prueba", nombre: "PRUEBA (práctica, no es real)", centro: "Almacén Agropecuario" });
-const UNIDAD_CORTA = { Unidades: "unid.", Kilogramos: "kg", Litros: "L" };
+const UNIDAD_CORTA = { Unidades: "unid.", Kilogramos: "kg", Litros: "L", Gramos: "g" };
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -34,6 +34,7 @@ const fmt = (n) => (Math.round(Number(n) * 1000) / 1000).toLocaleString("es-PY",
 const parseCant = (s) => { const t = String(s ?? "").trim().replace(/\s/g, "").replace(",", "."); if (!/^\d*\.?\d+$|^\d+\.$/.test(t)) return NaN; return Number(t); };
 const hoyISO = () => { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
 const fechaHora = (ms) => ms ? new Date(ms).toLocaleString("es-PY", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "";
+const sinCeros = (s) => String(s ?? "").replace(/^0+(?=\d)/, "");
 const slug = (s) => norm(s).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
 
 function toast(msg, ms = 2600) {
@@ -90,7 +91,7 @@ signInAnonymously(auth).catch((e) => {
 // ---------- Catálogo ----------
 async function cargarCatalogo() {
   const r = await fetch("catalogo.json");
-  st.catalogo = (await r.json()).map((p) => ({ ...p, _n: norm(p.p), _c: norm(p.c), _c2: norm(p.c2) }));
+  st.catalogo = (await r.json()).map((p) => ({ ...p, _n: norm(p.p), _c: norm(p.c), _c2: norm(p.c2), _cz: sinCeros(norm(p.c)), _c2z: sinCeros(norm(p.c2)) }));
 }
 function buscar(q) {
   const nq = norm(q); if (!nq) return [];
@@ -98,7 +99,7 @@ function buscar(q) {
   const res = [];
   for (const p of st.catalogo) {
     let score = -1;
-    if (p._c === nq || p._c2 === nq || p.id === nq) score = 100;
+    if (p._c === nq || p._c2 === nq || p.id === nq || (/^\d{6,}$/.test(nq) && (p._cz === sinCeros(nq) || p._c2z === sinCeros(nq)))) score = 100;
     else if (p._c2 && nq.length >= 6 && p._c2.includes(nq)) score = 80;
     else if (p._c.startsWith(nq)) score = 70;
     else if (palabras.every((w) => p._n.includes(w))) score = p._n.startsWith(palabras[0]) ? 60 : 50;
@@ -110,8 +111,8 @@ function buscar(q) {
   return res.slice(0, 40).map((x) => x[1]);
 }
 function porCodigoBarras(code) {
-  const nc = norm(code);
-  return st.catalogo.filter((p) => p._c2 === nc || p._c === nc || (p._c2 && p._c2.split(/[\s,;/]+/).includes(nc)));
+  const nc = norm(code), nz = sinCeros(nc);
+  return st.catalogo.filter((p) => p._c2 === nc || p._c === nc || p._cz === nz || p._c2z === nz || (p._c2 && p._c2.split(/[\s,;/]+/).includes(nc)));
 }
 
 // ---------- Buscador reutilizable ----------
