@@ -1,5 +1,5 @@
 // Service worker: cachea la app y el catálogo para abrir sin señal.
-const VERSION = "inv-tg-v2";
+const VERSION = "inv-tg-v3";
 const LOCAL = ["./", "index.html", "app.js", "styles.css", "catalogo.json", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
 const CDN = [
   "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js",
