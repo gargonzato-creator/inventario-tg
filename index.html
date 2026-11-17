@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="es-PY">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1f5130">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Inventario TG">
+<title>Inventario TG</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header id="top">
+  <div class="brand">Inventario TG</div>
+  <div id="sync" class="sync off">Conectando…</div>
+</header>
+
+<main>
+  <!-- Paso 1: nombre -->
+  <section id="vNombre" class="view hidden">
+    <h1>¿Quién sos?</h1>
+    <p class="muted">Tocá tu nombre para entrar.</p>
+    <div class="grid" id="listaNombres"></div>
+  </section>
+
+  <!-- Paso 2: depósito -->
+  <section id="vDeposito" class="view hidden">
+    <h1>Hola, <span class="nomUsuario"></span></h1>
+    <p class="muted">Elegí el depósito.</p>
+    <div class="stack" id="listaDepositos"></div>
+    <button class="btn link" id="btnCambiarNombre1">No soy <span class="nomUsuario"></span>, cambiar</button>
+  </section>
+
+  <!-- Paso 3: app -->
+  <section id="vApp" class="view hidden">
+    <div class="ctx">
+      <div><b class="nomUsuario"></b> · <span id="nomDeposito"></span></div>
+      <div class="ctxbtns">
+        <button class="btn mini" id="btnCambiarDep">Cambiar depósito</button>
+        <button class="btn mini" id="btnCambiarNombre2">Cambiar nombre</button>
+      </div>
+    </div>
+    <nav class="tabs">
+      <button class="tab active" data-tab="tConteo">Conteo</button>
+      <button class="tab" data-tab="tUso">Uso interno</button>
+    </nav>
+
+    <!-- CONTEO -->
+    <div id="tConteo" class="tabpane">
+      <div id="conteoLista">
+        <button class="btn big primary" id="btnNuevoConteo">+ Empezar conteo nuevo</button>
+        <h2>Conteos abiertos de este depósito</h2>
+        <div id="conteosAbiertos" class="stack"><p class="muted">Cargando…</p></div>
+      </div>
+
+      <div id="conteoActivo" class="hidden">
+        <div class="card info">
+          <div><b>Conteo</b> <span id="conteoTitulo"></span></div>
+          <div class="muted small" id="conteoMeta"></div>
+          <button class="btn mini" id="btnSalirConteo">← Ver otros conteos</button>
+        </div>
+        <div class="buscador" data-modo="conteo"></div>
+        <div id="panelConteo" class="card hidden"></div>
+        <h2>Cargado en este conteo <span id="conteoCant" class="pill">0</span></h2>
+        <div id="conteoItems" class="stack"></div>
+        <button class="btn big primary" id="btnEnviarConteo">Enviar conteo</button>
+      </div>
+    </div>
+
+    <!-- USO INTERNO -->
+    <div id="tUso" class="tabpane hidden">
+      <div class="buscador" data-modo="uso"></div>
+      <form id="formUso" class="card hidden" autocomplete="off">
+        <div id="usoProducto"></div>
+        <label>Cantidad <span id="usoUnidad" class="muted"></span>
+          <input id="usoCantidad" inputmode="decimal" placeholder="0" required></label>
+        <label>Motivo
+          <input id="usoMotivo" placeholder="Ej.: limpieza de cocina, almuerzo del personal" required></label>
+        <label>Centro de costo
+          <select id="usoCentro">
+            <option>Almacén Agropecuario</option>
+            <option>Almacén de Carnes</option>
+            <option>Cabaña Ita Kua</option>
+          </select></label>
+        <label>Concepto
+          <select id="usoConcepto">
+            <option>Insumos de restaurante y cocina</option>
+            <option>RETIROS DEL PROPIETARIO</option>
+            <option>Otro</option>
+          </select></label>
+        <label id="lblConceptoOtro" class="hidden">¿Cuál concepto?
+          <input id="usoConceptoOtro"></label>
+        <label>Fecha
+          <input id="usoFecha" type="date" required></label>
+        <div class="row">
+          <button type="button" class="btn big" id="btnUsoCancelar">Cancelar</button>
+          <button type="submit" class="btn big primary">Guardar uso</button>
+        </div>
+      </form>
+      <h2>Usos internos recientes</h2>
+      <div id="usosLista" class="stack"><p class="muted">Cargando…</p></div>
+    </div>
+  </section>
+</main>
+
+<!-- Escáner -->
+<div id="scanner" class="overlay hidden">
+  <div class="scanbox">
+    <div id="scanVideoWrap"><video id="scanVideo" playsinline muted></video><div id="scanQr"></div></div>
+    <p class="center" id="scanMsg">Apuntá la cámara al código de barras</p>
+    <button class="btn big" id="btnScanCerrar">Cerrar</button>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<footer>Esto no carga nada en Bims; lo revisa el encargado de inventario.</footer>
+
+<template id="tplBuscador">
+  <div class="searchrow">
+    <input class="q" type="search" placeholder="Nombre, ficha o código" autocomplete="off" autocorrect="off" spellcheck="false">
+    <button class="btn scan" type="button" title="Escanear">📷 Escanear</button>
+  </div>
+  <div class="resultados stack"></div>
+</template>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
