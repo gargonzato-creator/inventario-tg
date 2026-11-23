@@ -16,8 +16,8 @@ const firebaseConfig = {
   appId: "1:1058376237664:web:b3d63e5d6de5c759b57905"
 };
 
-export const APP_VERSION = "v4 (17/11)";
-const USUARIOS = ["Felix", "Tatiana", "Elías", "Junior"];
+export const APP_VERSION = "v5 (23/11)";
+const USUARIOS = ["Felix", "Tatiana", "Elías", "Junior", "Belén"];
 const DEPOSITOS = [
   { id: "agro", nombre: "Almacén agropecuario", centro: "Almacén Agropecuario" },
   { id: "carnes", nombre: "Almacén De Carnes Itacurubi", centro: "Almacén de Carnes" },
